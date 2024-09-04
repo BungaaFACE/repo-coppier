@@ -91,7 +91,7 @@ def sync_repos(repo_status: list[dict], o_client: APIClient, d_client: APIClient
             if url:
                 print(f'New repo created on service {o_client.service}. Link: {url}')
 
-        repo_path = join(project_path, 'cloned_repos', repo)
+        repo_path = join(project_path, 'cloned_repos', repo['name'])
         repo = Repo.clone_from(o_client.get_token_repo_url(repo), repo_path, bare=True)
         try:
             d_remote = repo.create_remote('mirror', d_client.get_token_repo_url(repo))
