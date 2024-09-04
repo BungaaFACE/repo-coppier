@@ -95,7 +95,7 @@ def sync_repos(repo_status: list[dict], o_client: APIClient, d_client: APIClient
         repo = Repo.clone_from(o_client.get_token_repo_url(repo_data['name']), repo_path, bare=True)
         try:
             d_remote = repo.create_remote('mirror', d_client.get_token_repo_url(repo_data['name']))
-            d_remote.push(mirror=True).raise_if_error()
+            d_remote.push(mirror=True, rebase=True).raise_if_error()
         except Exception as e:
             print(f'Exception occured while pushing repo. Info:\n{e}')
         finally:
