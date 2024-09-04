@@ -1,0 +1,67 @@
+variables:
+  CT_USER: "root"
+  PROJECT_NAME: "repo-coppier"
+  PROJECT_DIR: "/data/$PROJECT_NAME"
+  REMOTE_SERVER: "172.0.0.104"
+
+stages:
+  - init
+  - deploy
+  - sync
+
+
+.ssh_prepare: &ssh_prepare
+    - ssh-keygen -R $REMOTE_SERVER && ssh-keyscan $REMOTE_SERVER >> ~/.ssh/known_hosts
+
+.ct_prepare: &ct_prepare
+    - echo "CT UPDATE && UPGRADE"
+    - ssh $CT_USER@$REMOTE_SERVER "sudo apt update && sudo apt -y upgrade && sudo apt autoremove"
+    - echo "CT PYTHON3-PIP INSTALL"
+    - ssh $CT_USER@$REMOTE_SERVER "sudo apt -y install python3-pip python3.11-venv"
+    - echo "CREATING FOLDER IF NOT EXIST ON CT"
+    - ssh $CT_USER@$REMOTE_SERVER "mkdir -p $PROJECT_DIR"
+    - echo "CREATING VENV ON CT"
+    - ssh $CT_USER@$REMOTE_SERVER "test -e $PROJECT_DIR/.venv || /usr/bin/python3 -m venv $PROJECT_DIR/.venv"
+
+.update_script: &update_script
+    - echo "SENDING LAST VERSION TO CT"
+    - /usr/bin/sftp $CT_USER@$REMOTE_SERVER:* $PROJECT_DIR
+    - echo "INSTALLING REQUIREMENTS TO CT"
+    - ssh $CT_USER@$REMOTE_SERVER "$PROJECT_DIR/.venv/bin/pip install -r $PROJECT_DIR/requirements.txt"
+
+.start_sync: &start_sync
+    - echo "STARTING SYNC"
+    - ssh $CT_USER@$REMOTE_SERVER "$PROJECT_DIR/.venv/bin/python $PROJECT_DIR/repo-coppier.py sync"
+    - echo "SYNC COMPLETED"
+
+
+init_CT_job:
+  stage: init
+  tags:
+    - ct_shell
+  script:
+    - *ssh_prepare
+    - *ct_prepare
+  allow_failure: false
+  when: manual
+
+deploy_job:
+  stage: deploy
+  tags:
+    - ct_shell
+  script:
+    - *update_script
+  allow_failure: false
+  when: manual
+
+sync_job:
+  stage: sync
+  tags:
+    - ct_shell
+  description: start manual or schedule pipeline
+  script:
+    - *start_sync
+  allow_failure: false
+  when: manual
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "schedule"
