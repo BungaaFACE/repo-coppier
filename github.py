@@ -1,7 +1,6 @@
 from CONFIG import GITHUB_TOKEN
 from api_client import APIClient
-from datetime import datetime
-import os
+from datetime import datetime, UTC
 
 
 class GithubClient(APIClient):
@@ -32,7 +31,8 @@ class GithubClient(APIClient):
             )
             if commits:
                 date_str = commits[0]['commit']['committer']['date']
-                date = datetime.strptime(date_str, '%Y-%m-%dT%H:%M:%SZ')
+                date = datetime.strptime(date_str, '%Y-%m-%dT%H:%M:%SZ').replace(tzinfo=UTC)
+                date = date.astimezone()
                 return date
 
     def get_project_link(self, project_name):

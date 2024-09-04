@@ -1,7 +1,6 @@
 from CONFIG import GITLAB_TOKEN
 from api_client import APIClient
 from datetime import datetime
-import os
 
 
 class GitlabClient(APIClient):
@@ -33,6 +32,7 @@ class GitlabClient(APIClient):
             if commits:
                 date_str = commits[0]['committed_date']
                 date = datetime.strptime(date_str, '%Y-%m-%dT%H:%M:%S.%f%z')
+                date = date.astimezone()
                 return date
 
     def get_project_link(self, project_name):
