@@ -11,13 +11,15 @@ stages:
 
 
 .ssh_prepare: &ssh_prepare
+    - mkdir -p ~/.ssh && touch ~/.ssh/known_hosts
     - ssh-keygen -R $REMOTE_SERVER && ssh-keyscan $REMOTE_SERVER >> ~/.ssh/known_hosts
+    - eval "$(ssh-agent -s)" && ssh-add ~/.ssh/id_rsa
 
 .ct_prepare: &ct_prepare
     - echo "CT UPDATE && UPGRADE"
     - ssh $CT_USER@$REMOTE_SERVER "sudo apt update && sudo apt -y upgrade && sudo apt autoremove"
     - echo "CT PYTHON3-PIP INSTALL"
-    - ssh $CT_USER@$REMOTE_SERVER "sudo apt -y install python3-pip python3.11-venv"
+    - ssh $CT_USER@$REMOTE_SERVER "sudo apt -y install python3-pip python3.11-venv git"
     - echo "CREATING FOLDER IF NOT EXIST ON CT"
     - ssh $CT_USER@$REMOTE_SERVER "mkdir -p $PROJECT_DIR"
     - echo "CREATING VENV ON CT"
@@ -25,7 +27,7 @@ stages:
 
 .update_script: &update_script
     - echo "SENDING LAST VERSION TO CT"
-    - /usr/bin/sftp $CT_USER@$REMOTE_SERVER:* $PROJECT_DIR
+    - /usr/bin/sftp $CT_USER@$REMOTE_SERVER:$PROJECT_DIR/ <<< $'put ./*'
     - echo "INSTALLING REQUIREMENTS TO CT"
     - ssh $CT_USER@$REMOTE_SERVER "$PROJECT_DIR/.venv/bin/pip install -r $PROJECT_DIR/requirements.txt"
 
@@ -43,6 +45,7 @@ init_CT_job:
     - *ssh_prepare
     - *ct_prepare
   allow_failure: false
+  needs: []
   when: manual
 
 deploy_job:
@@ -52,16 +55,19 @@ deploy_job:
   script:
     - *update_script
   allow_failure: false
+  needs: []
   when: manual
 
+# Can be used for manual sync or gitlab pipeline schedule
 sync_job:
   stage: sync
   tags:
     - ct_shell
-  description: start manual or schedule pipeline
   script:
     - *start_sync
   allow_failure: false
-  when: manual
+  needs: []
   rules:
+    - if: '$CI_PIPELINE_SOURCE == "push" || $CI_PIPELINE_SOURCE == "web" || $CI_PIPELINE_SOURCE == "pipleline"'
+      when: manual
     - if: $CI_PIPELINE_SOURCE == "schedule"
