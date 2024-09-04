@@ -40,9 +40,9 @@ def add_repo(service, repo_name):
     if '/' in repo_name:
         try:
             repo_name = repo_name.split('/')[-1]
-            print(f'Extracted repo name {repo_name} from link')
+            print(f'Extracted name {repo_name} from link')
         except Exception as e:
-            print('Unsupported repo name')
+            print('Unsupported name')
             raise e
 
     repos = load_repos()
@@ -59,7 +59,7 @@ def check_repos_status(repo_list: list, o_client: APIClient, d_client: APIClient
     repo_status = []
     print('Checking commits...')
     for repo in progressbar(repo_list, **PROGRESSBAR_SETTINGS):
-        repo_data = {'repo name': f"{repo}"}
+        repo_data = {'name': f"{repo}"}
 
         o_date = o_client.get_last_commit_date(repo)
         d_date = d_client.get_last_commit_date(repo)
@@ -69,11 +69,11 @@ def check_repos_status(repo_list: list, o_client: APIClient, d_client: APIClient
 
         if not o_date:
             repo_data['status'] = 'SKIP'
-        elif not d_date:
+        elif not d_date and repo not in d_client.projects_id:
             repo_data['status'] = 'CREATE'
         else:
             repo_data['status'] = 'UPDATE'
-            if o_date <= d_date:
+            if d_date and o_date <= d_date:
                 repo_data['status'] = 'LATEST'
 
         repo_status.append(repo_data)
@@ -84,20 +84,20 @@ def check_repos_status(repo_list: list, o_client: APIClient, d_client: APIClient
 
 def sync_repos(repo_status: list[dict], o_client: APIClient, d_client: APIClient):
     print('Syncing repos...')
-    for repo in progressbar(repo_status, **PROGRESSBAR_SETTINGS):
-        if repo['status'] == 'CREATE':
-            origin_link = o_client.get_project_link(repo['repo name'])
-            url = d_client.create_project(repo['repo name'], origin_link)
+    for repo_data in progressbar(repo_status, **PROGRESSBAR_SETTINGS):
+        if repo_data['status'] == 'CREATE':
+            origin_link = o_client.get_project_link(repo_data['name'])
+            url = d_client.create_project(repo_data['name'], origin_link)
             if url:
                 print(f'New repo created on service {o_client.service}. Link: {url}')
 
-        repo_path = join(project_path, 'cloned_repos', repo['name'])
-        repo = Repo.clone_from(o_client.get_token_repo_url(repo), repo_path, bare=True)
+        repo_path = join(project_path, 'cloned_repos', repo_data['name'])
+        repo = Repo.clone_from(o_client.get_token_repo_url(repo_data['name']), repo_path, bare=True)
         try:
-            d_remote = repo.create_remote('mirror', d_client.get_token_repo_url(repo))
+            d_remote = repo.create_remote('mirror', d_client.get_token_repo_url(repo_data['name']))
             d_remote.push(mirror=True).raise_if_error()
         except Exception as e:
-            print(f'Exception occured while pushing repo. Info:\n{e.with_traceback()}')
+            print(f'Exception occured while pushing repo. Info:\n{e}')
         finally:
             repo.close()
             rmtree(repo_path)
@@ -145,7 +145,7 @@ if __name__ == "__main__":
 
     parser_sync = subparsers.add_parser('sync')
     parser_sync.add_argument("--repo", "-r", type=str, required=False,
-                             help='repo name')
+                             help='name')
     parser_sync.add_argument("--origin-service", "-os", type=str, required=False,
                              help='Origin repositories service', default='github',
                              choices=SUPPORTED_SERVICES)
@@ -158,7 +158,7 @@ if __name__ == "__main__":
                             type=str, help='repo service name',
                             choices=SUPPORTED_SERVICES)
     parser_add.add_argument("repo", nargs=1, type=str,
-                            help='repo name')
+                            help='name')
 
     parser_list = subparsers.add_parser('list')
     parser_list.add_argument("service", nargs='?',
@@ -168,7 +168,7 @@ if __name__ == "__main__":
 
     parser_status = subparsers.add_parser('status')
     parser_status.add_argument("--repo", "-r", type=str, required=False,
-                               help='repo name')
+                               help='name')
     parser_status.add_argument("--origin-service", "-os", type=str, required=False,
                                help='Origin repositories service', default='github',
                                choices=SUPPORTED_SERVICES)
