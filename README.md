@@ -41,7 +41,8 @@ Actions have sub parameters that are not required but can be used for more flexi
 Action sync has 3 non-reqired parameters.
 - ***--repo*** - allows to choose one repo, even if its not added repo-coppier
 - ***--origin-service*** or ***-os*** - choose origin git-service wherefrom copy repository, default: github
-- ***--destination-service*** or ***-ds*** - choose destionation git-service whereto copy repository, default: gitlab
+- ***--destination-service*** or ***-ds*** - choose destionation git-service whereto copy repository, default: gitlab  
+- ***--force*** or ***-f*** - if mirror repo has changes enable force push on protected branches to push changes, default: False
   
 ***Examples:***  
   `repo-coppier sync -repo repo-coppier`  

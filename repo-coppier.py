@@ -167,8 +167,8 @@ def main():
     parser_sync.add_argument("--destination-service", "-ds", type=str, required=False,
                              help='Destination repositories service', default='gitlab',
                              choices=SUPPORTED_SERVICES)
-    parser_sync.add_argument("--force", "-f", action=argparse.BooleanOptionalAction,
-                             help='if mirror repo has changes do enable force on protected branches to push changes')
+    parser_sync.add_argument("--force", "-f", action=argparse.BooleanOptionalAction, default=False,
+                             help='if mirror repo has changes enable force push on protected branches to push changes')
 
     parser_add = subparsers.add_parser('add')
     parser_add.add_argument("service", nargs=1,
