@@ -53,6 +53,18 @@ class GitlabClient(APIClient):
             self.projects_id[project_name] = response['id']
             return response['web_url']
 
+    def enable_force_push(self, project_name):
+        prot_branches: list = self._get(
+            url=f'{self.api_url}/projects/{self.projects_id[project_name]}/protected_branches',
+            params={'allow_force_push': False}
+        )
+        no_fpush = filter(lambda branch: not branch['allow_force_push'], prot_branches)
+        for branch in no_fpush:
+            response = self._patch(
+                url=f'{self.api_url}/projects/{self.projects_id[project_name]}/protected_branches/{branch['name']}',
+                json={'allow_force_push': True}
+            )
+
 
 if __name__ == "__main__":
     from pprint import pprint
@@ -61,3 +73,4 @@ if __name__ == "__main__":
     print(gitlab.user_name)
     # print(gitlab.get_last_commit_date('test_project'))
     # gitlab.create_project('test_project3', 'test_origin_project_link.com')
+    gitlab.enable_force_push('repo-coppier')

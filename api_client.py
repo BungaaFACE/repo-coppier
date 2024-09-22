@@ -27,6 +27,33 @@ class APIClient(ABC):
         response.raise_for_status()
         return response.json()
 
+    def _put(self, url, headers={}, params={}, data={}, json={}):
+        response = requests.put(url,
+                                headers=self.auth_header | headers,
+                                params=params,
+                                data=data,
+                                json=json)
+        response.raise_for_status()
+        return response.json()
+
+    def _patch(self, url, headers={}, params={}, data={}, json={}):
+        response = requests.patch(url,
+                                  headers=self.auth_header | headers,
+                                  params=params,
+                                  data=data,
+                                  json=json)
+        response.raise_for_status()
+        return response.json()
+
+    def _delete(self, url, headers={}, params={}, data={}, json={}):
+        response = requests.patch(url,
+                                  headers=self.auth_header | headers,
+                                  params=params,
+                                  data=data,
+                                  json=json)
+        response.raise_for_status()
+        return response.json()
+
     @property
     @abstractmethod
     def service(self) -> str:
@@ -65,5 +92,12 @@ class APIClient(ABC):
         project_name - name of project
         project_link - link to origin project
         returns created repo url
+        '''
+        pass
+
+    @abstractmethod
+    def enable_force_push(self, project_name: str) -> None:
+        '''
+        enables force push on protected branches
         '''
         pass

@@ -1,7 +1,7 @@
 from os.path import abspath, join, dirname
 from progressbar import progressbar, Percentage, GranularBar, ETA, SimpleProgress
 from tabulate import tabulate
-from git import Repo, rmtree
+from git import Repo, rmtree, GitCommandError
 from pprint import pprint
 import argparse
 import json
@@ -82,7 +82,7 @@ def check_repos_status(repo_list: list, o_client: APIClient, d_client: APIClient
     return repo_status
 
 
-def sync_repos(repo_status: list[dict], o_client: APIClient, d_client: APIClient):
+def sync_repos(repo_status: list[dict], o_client: APIClient, d_client: APIClient, force=False):
     print('Syncing repos...')
     for repo_data in progressbar(repo_status, **PROGRESSBAR_SETTINGS):
         if repo_data['status'] == 'CREATE':
@@ -93,11 +93,26 @@ def sync_repos(repo_status: list[dict], o_client: APIClient, d_client: APIClient
 
         repo_path = join(project_path, 'cloned_repos', repo_data['name'])
         repo = Repo.clone_from(o_client.get_token_repo_url(repo_data['name']), repo_path, bare=True)
+
         try:
             d_remote = repo.create_remote('mirror', d_client.get_token_repo_url(repo_data['name']))
-            d_remote.push(mirror=True, rebase=True).raise_if_error()
+        except:
+            # if remote 'mirror' already exists
+            d_remote = repo.create_remote('awdadad123', d_client.get_token_repo_url(repo_data['name']))
+
+        try:
+            d_remote.push(mirror=True).raise_if_error()
+        except GitCommandError as e:
+            if force:
+                print(f'Exception occured while pushing repo. Trying to force push repo. Info:\n{e}')
+                d_remote.push(mirror=True, force=True,
+                              allow_unsafe_options=True, force_with_lease=True).raise_if_error()
+            else:
+                print(f'Exception occured while pushing repo. Enable force pushing (--force) might help. Info:\n{e}')
+
         except Exception as e:
             print(f'Exception occured while pushing repo. Info:\n{e}')
+            raise e
         finally:
             repo.close()
             rmtree(repo_path)
@@ -120,7 +135,7 @@ def start_programm(args):
         repo_status = check_repos_status(repos, o_client, d_client)
 
         if args.action == 'sync':
-            sync_repos(repo_status, o_client, d_client)
+            sync_repos(repo_status, o_client, d_client, args.force)
 
     elif args.action == 'add':
         add_repo(args.service[0], args.repo[0])
@@ -132,7 +147,7 @@ def start_programm(args):
         pprint(repos)
 
 
-if __name__ == "__main__":
+def main():
     parser = argparse.ArgumentParser(prog='repo-copier.py',
                                      description='Tool copies your github repositories to gitlab')
 
@@ -152,6 +167,8 @@ if __name__ == "__main__":
     parser_sync.add_argument("--destination-service", "-ds", type=str, required=False,
                              help='Destination repositories service', default='gitlab',
                              choices=SUPPORTED_SERVICES)
+    parser_sync.add_argument("--force", "-f", action=argparse.BooleanOptionalAction,
+                             help='if mirror repo has changes do enable force on protected branches to push changes')
 
     parser_add = subparsers.add_parser('add')
     parser_add.add_argument("service", nargs=1,
@@ -178,3 +195,7 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
     start_programm(args)
+
+
+if __name__ == "__main__":
+    main()

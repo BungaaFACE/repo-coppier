@@ -53,12 +53,33 @@ class GithubClient(APIClient):
             self.projects_id[project_name] = response['id']
             return response['html_url']
 
+    def enable_force_push(self, project_name):
+        '''
+        this function uses as a generator to save modified branch and their parameter
+        fitst iter will enable force push
+        second iter will disable force push
+        '''
+        ruleset = self._post(
+            url=f'{self.api_url}/repos/{self.user_name}/{project_name}/rulesets',
+            json={
+                'name': 'force-push-ruleset',
+                'target': 'branch',
+                'enforcement': 'active',
+                # Enable force push on all branches for repo owner
+                'bypass_actors': [{'actor_id': 5, 'actor_type': 'RepositoryRole', 'bypass_mode': 'always'}],
+                'conditions': {'ref_name': {'exclude': [], 'include': ['~ALL']}},
+                'rules': [{'type': 'non_fast_forward'}]
+            }
+        )
+
 
 if __name__ == "__main__":
     from pprint import pprint
+    import time
     github = GithubClient()
     print(github.user_id)
     print(github.user_name)
     # print(github.get_last_commit_date('NginxProxyManagerHelper'))
     # github.create_project('test_project1', 'test_original_link.com')
     # print(github.get_token_repo_url('test_project'))
+    github.enable_force_push('NginxProxyManagerHelper')
