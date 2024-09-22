@@ -33,7 +33,7 @@ stages:
 
 .start_sync: &start_sync
     - echo "STARTING SYNC"
-    - ssh $CT_USER@$REMOTE_SERVER "$PROJECT_DIR/.venv/bin/python $PROJECT_DIR/repo-coppier.py sync"
+    - ssh $CT_USER@$REMOTE_SERVER "$PROJECT_DIR/.venv/bin/python $PROJECT_DIR/repo-coppier.py sync --force"
     - echo "SYNC COMPLETED"
 
 
