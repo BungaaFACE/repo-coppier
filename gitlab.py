@@ -61,7 +61,7 @@ class GitlabClient(APIClient):
         no_fpush = filter(lambda branch: not branch['allow_force_push'], prot_branches)
         for branch in no_fpush:
             response = self._patch(
-                url=f'{self.api_url}/projects/{self.projects_id[project_name]}/protected_branches/{branch['name']}',
+                url=f'{self.api_url}/projects/{self.projects_id[project_name]}/protected_branches/{branch["name"]}',
                 json={'allow_force_push': True}
             )
 
