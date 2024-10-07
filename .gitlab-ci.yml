@@ -71,3 +71,4 @@ sync_job:
     - if: '$CI_PIPELINE_SOURCE == "push" || $CI_PIPELINE_SOURCE == "web" || $CI_PIPELINE_SOURCE == "pipleline"'
       when: manual
     - if: $CI_PIPELINE_SOURCE == "schedule"
+      when: always
