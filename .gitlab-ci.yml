@@ -17,7 +17,7 @@ stages:
 
 .ct_prepare: &ct_prepare
     - echo "CT UPDATE && UPGRADE"
-    - ssh $CT_USER@$REMOTE_SERVER "sudo apt update && sudo apt -y upgrade && sudo apt autoremove"
+    - ssh $CT_USER@$REMOTE_SERVER "sudo apt update && sudo apt -y upgrade && sudo apt -y autoremove"
     - echo "CT PYTHON3-PIP INSTALL"
     - ssh $CT_USER@$REMOTE_SERVER "sudo apt -y install python3-pip python3.11-venv git"
     - echo "CREATING FOLDER IF NOT EXIST ON CT"
