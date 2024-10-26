@@ -84,6 +84,10 @@ def check_repos_status(repo_list: list, o_client: APIClient, d_client: APIClient
 
 def sync_repos(repo_status: list[dict], o_client: APIClient, d_client: APIClient, force=False):
     print('Syncing repos...')
+    repo_status = filter(lambda repo: repo['status'] != 'LATEST' and repo['status'] != 'SKIP', repo_status)
+    if not repo_status:
+        print('All repos are up to date.')
+        return
     for repo_data in progressbar(repo_status, **PROGRESSBAR_SETTINGS):
         if repo_data['status'] == 'CREATE':
             origin_link = o_client.get_project_link(repo_data['name'])
