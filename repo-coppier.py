@@ -93,7 +93,7 @@ def sync_repos(repo_status: list[dict], o_client: APIClient, d_client: APIClient
             origin_link = o_client.get_project_link(repo_data['name'])
             url = d_client.create_project(repo_data['name'], origin_link)
             if url:
-                print(f'New repo created on service {o_client.service}. Link: {url}')
+                print(f'New repo created on service {d_client.service}. Link: {url}')
 
         repo_path = join(project_path, 'cloned_repos', repo_data['name'])
         repo = Repo.clone_from(o_client.get_token_repo_url(repo_data['name']), repo_path, bare=True)
