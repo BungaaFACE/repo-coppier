@@ -25,6 +25,40 @@ stages:
     - echo "CREATING VENV ON CT"
     - ssh $CT_USER@$REMOTE_SERVER "test -e $PROJECT_DIR/.venv || /usr/bin/python3 -m venv $PROJECT_DIR/.venv"
 
+.service_prepare: &service_prepare
+    - echo "CREATING REPO-COPPIER SERVICE"
+    - |
+        $SSH_COMMAND "sudo test -e /etc/systemd/system/hh_booster.service || sudo tee /etc/systemd/system/hh_booster.service > /dev/null << EOF
+        [Unit]
+        Description=$PROJECT_NAME
+        After=network.target
+        [Service]
+        Environment="LANG=ru_RU.UTF-8"
+        User=$CT_USER
+        WorkingDirectory=$PROJECT_DIR/
+        ExecStart=$PROJECT_DIR/.venv/bin/python3 hh_booster.py
+        [Install]
+        WantedBy=multi-user.target
+        EOF" && 
+        echo "RESTARTING SYSTEMD DAEMON" && 
+        $SSH_COMMAND "sudo systemctl daemon-reload"
+    - echo "CREATING REPO-COPPIER TIMER"
+    - |
+        $SSH_COMMAND "sudo test -e /etc/systemd/system/hh_booster.timer || sudo tee /etc/systemd/system/hh_booster.timer > /dev/null << EOF
+        [Unit]
+        Description=hh booster timer
+        [Timer]
+        Unit=hh_booster.service
+        OnCalendar=*-*-* *:*0:00
+        Persistent=true
+        [Install]
+        WantedBy=timers.target
+        EOF" && 
+        echo "RESTARTING SYSTEMD DAEMON" && 
+        $SSH_COMMAND "sudo systemctl daemon-reload"
+    - echo "ENABLING AND STARTING HH_BOOSTER TIMER"
+    - $SSH_COMMAND "sudo systemctl enable --now hh_booster.timer"
+
 .update_script: &update_script
     - echo "SENDING LAST VERSION TO CT"
     - /usr/bin/sftp $CT_USER@$REMOTE_SERVER:$PROJECT_DIR/ <<< $'put ./*'
@@ -44,6 +78,7 @@ init_CT_job:
   script:
     - *ssh_prepare
     - *ct_prepare
+    - *service_prepare
   allow_failure: false
   needs: []
   when: manual
