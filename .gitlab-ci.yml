@@ -3,6 +3,7 @@ variables:
   PROJECT_NAME: "repo-coppier"
   PROJECT_DIR: "/data/$PROJECT_NAME"
   REMOTE_SERVER: "172.0.0.104"
+  SSH_COMMAND: "ssh $CT_USER@$REMOTE_SERVER"
 
 stages:
   - init
@@ -28,15 +29,16 @@ stages:
 .service_prepare: &service_prepare
     - echo "CREATING REPO-COPPIER SERVICE"
     - |
-        $SSH_COMMAND "sudo test -e /etc/systemd/system/hh_booster.service || sudo tee /etc/systemd/system/hh_booster.service > /dev/null << EOF
+        $SSH_COMMAND "sudo test -e /etc/systemd/system/repo-coppier.service || sudo tee /etc/systemd/system/repo-coppier.service > /dev/null << EOF
         [Unit]
         Description=$PROJECT_NAME
         After=network.target
         [Service]
+        Type=oneshot
         Environment="LANG=ru_RU.UTF-8"
         User=$CT_USER
         WorkingDirectory=$PROJECT_DIR/
-        ExecStart=$PROJECT_DIR/.venv/bin/python3 hh_booster.py
+        ExecStart=$PROJECT_DIR/.venv/bin/python $PROJECT_DIR/repo-coppier.py sync --force
         [Install]
         WantedBy=multi-user.target
         EOF" && 
@@ -44,20 +46,20 @@ stages:
         $SSH_COMMAND "sudo systemctl daemon-reload"
     - echo "CREATING REPO-COPPIER TIMER"
     - |
-        $SSH_COMMAND "sudo test -e /etc/systemd/system/hh_booster.timer || sudo tee /etc/systemd/system/hh_booster.timer > /dev/null << EOF
+        $SSH_COMMAND "sudo test -e /etc/systemd/system/repo-coppier.timer || sudo tee /etc/systemd/system/repo-coppier.timer > /dev/null << EOF
         [Unit]
-        Description=hh booster timer
+        Description=repo-coppier timer
         [Timer]
-        Unit=hh_booster.service
-        OnCalendar=*-*-* *:*0:00
+        Unit=repo-coppier.service
+        OnCalendar=*:0/15
         Persistent=true
         [Install]
         WantedBy=timers.target
         EOF" && 
         echo "RESTARTING SYSTEMD DAEMON" && 
         $SSH_COMMAND "sudo systemctl daemon-reload"
-    - echo "ENABLING AND STARTING HH_BOOSTER TIMER"
-    - $SSH_COMMAND "sudo systemctl enable --now hh_booster.timer"
+    - echo "ENABLING AND STARTING REPO-COPPIER TIMER"
+    - $SSH_COMMAND "sudo systemctl enable --now repo-coppier.timer"
 
 .update_script: &update_script
     - echo "SENDING LAST VERSION TO CT"
