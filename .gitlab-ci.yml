@@ -16,6 +16,8 @@ build_repo_coppier:
   script:
     - docker build -f deploy/repo-coppier.dockerfile -t localhost:5000/repo-coppier:latest .
     - docker push localhost:5000/repo-coppier:latest
+  when: manual
+  allow_failure: true
 
 deploy_repo_coppier:
   extends: .compose_deploy_template
@@ -28,3 +30,5 @@ sync:
   stage: misc
   script:
     - docker compose -f ${DEPLOY_PATH}/compose-repo-coppier.yaml up --force-recreate
+  when: manual
+  allow_failure: true
