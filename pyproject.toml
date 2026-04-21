@@ -1,0 +1,13 @@
+[project]
+name = "repo-coppier"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "gitpython>=3.1.46",
+    "progressbar2>=4.5.0",
+    "python-dotenv>=1.2.2",
+    "requests>=2.33.1",
+    "tabulate>=0.10.0",
+]

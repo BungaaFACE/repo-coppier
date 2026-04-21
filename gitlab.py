@@ -1,4 +1,4 @@
-from CONFIG import GITLAB_TOKEN
+from config import GITLAB_TOKEN
 from api_client import APIClient
 from datetime import datetime
 

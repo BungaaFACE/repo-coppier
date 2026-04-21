@@ -1,0 +1,12 @@
+version: '3.8'
+
+services:
+  repo-coppier:
+    image: localhost:5000/repo-coppier:latest
+    container_name: repo-coppier
+    environment:
+      - GITHUB_TOKEN=${GITHUB_TOKEN}
+      - GITLAB_TOKEN=${GITLAB_TOKEN}
+    volumes:
+      - ${DATA_PATH}/repo-coppier/repositories.json:/app/repositories.json:rw
+    restart: unless-stopped

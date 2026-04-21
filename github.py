@@ -1,4 +1,4 @@
-from CONFIG import GITHUB_TOKEN
+from config import GITHUB_TOKEN
 from api_client import APIClient
 from datetime import datetime, UTC
 
