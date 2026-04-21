@@ -29,6 +29,6 @@ sync:
     - shell
   stage: misc
   script:
-    - docker compose -f ${DEPLOY_PATH}/compose-repo-coppier.yaml up --force-recreate
+    - docker compose -f ${COMPOSE_PATH}/compose-repo-coppier.yaml up --force-recreate
   when: manual
   allow_failure: true
