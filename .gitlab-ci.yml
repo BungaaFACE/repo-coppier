@@ -10,6 +10,8 @@ stages:
   - misc
 
 build_repo_coppier:
+  tags:
+    - shell
   stage: build
   script:
     - docker build -f deploy/repo-coppier.dockerfile -t localhost:5000/repo-coppier:latest .
@@ -21,6 +23,8 @@ deploy_repo_coppier:
     COMPOSE_FILE: "deploy/compose-repo-coppier.yaml"
 
 sync:
+  tags:
+    - shell
   stage: misc
   script:
     - docker compose -f ${DEPLOY_PATH}/compose-repo-coppier.yaml up --force-recreate
