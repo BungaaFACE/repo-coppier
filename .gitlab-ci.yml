@@ -22,7 +22,8 @@ build_repo_coppier:
 deploy_repo_coppier:
   extends: .compose_deploy_template
   variables:
-    COMPOSE_FILE: "deploy/compose-repo-coppier.yaml"
+    COMPOSE_FILE_DIR: "deploy/"
+    COMPOSE_FILE: "compose-repo-coppier.yaml"
 
 sync:
   tags:
