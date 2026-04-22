@@ -22,6 +22,8 @@ build_repo_coppier:
 deploy_repo_coppier:
   extends: .compose_deploy_template
   before_script:
+    - echo "$repositories_json"
+    - cat $repositories_json
     - cp $repositories_json ${DATA_PATH}/repo-coppier/repositories.json
   variables:
     COMPOSE_FILE_DIR: "deploy/"
