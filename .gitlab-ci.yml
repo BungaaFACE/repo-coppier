@@ -1,5 +1,5 @@
 include:
-  - project: 'BungaaFACE/home_lab'
+  - project: 'BungaaFACE/home-lab'
     file: 
       - 'pipeline-includes/templates.yml'
       - 'pipeline-includes/common_dirs.yml'
