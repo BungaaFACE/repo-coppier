@@ -10,6 +10,7 @@ stages:
   - misc
 
 build_repo_coppier:
+  extends: .triggered_template
   tags:
     - shell
   stage: build
@@ -17,12 +18,11 @@ build_repo_coppier:
   script:
     - docker build -f deploy/repo-coppier.dockerfile -t localhost:5000/repo-coppier:latest .
     - docker push localhost:5000/repo-coppier:latest
-  rules:
-    - if: $TRIGGER_ACTION == $CI_JOB_NAME
-    - when: manual
 
 deploy_repo_coppier:
-  extends: .compose_deploy_template
+  extends: 
+    - .compose_deploy_template
+    - .triggered_template
   needs: []
   before_script:
     - mkdir -p ${DATA_PATH}/repo-coppier
@@ -30,17 +30,12 @@ deploy_repo_coppier:
   variables:
     COMPOSE_FILE_DIR: "deploy/"
     COMPOSE_FILE: "compose-repo-coppier.yaml"
-  rules:
-    - if: $TRIGGER_ACTION == $CI_JOB_NAME
-    - when: manual
 
 sync_repo_coppier:
+  extends: .triggered_template
   tags:
     - shell
   stage: misc
   needs: []
   script:
     - docker compose -f ${COMPOSE_PATH}/compose-repo-coppier.yaml up --force-recreate
-  rules:
-    - if: $TRIGGER_ACTION == $CI_JOB_NAME
-    - when: manual
