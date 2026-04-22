@@ -1,5 +1,7 @@
 FROM python:slim
 
+RUN apt update && apt install -y git
+
 WORKDIR /app
 
 COPY . .
