@@ -2,7 +2,7 @@ include:
   - project: 'BungaaFACE/home-lab'
     file: 
       - 'pipeline-includes/templates.yml'
-      - 'pipeline-includes/common_dirs.yml'
+      - 'pipeline-includes/variables.yml'
 
 stages:
   - build
